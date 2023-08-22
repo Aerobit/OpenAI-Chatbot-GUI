@@ -11,19 +11,26 @@ from uuid import getnode as get_mac
 
 CONFIG_FILE = 'config.json'
 
-KEY = 'GRO9jNw5lXc4U5B8_Wz3zAaPPhQDgWFQ8CQxnLhxjJ0='
+# Create a single key
+SECRET_PART = 'GRO9jNw5lXc4U5B8_Wz3zAaPPhQDgWFQ8CQxnLhxjJ0='
 
+# Get the MAC address of the computer
 mac = ':'.join(('%012X' % get_mac())[i:i+2] for i in range(0, 12, 2))
 
-hashed_key = hashlib.sha256((mac + KEY).encode()).digest()
+# Create a hash of the concatenated string and MAC address
+hashed_key = hashlib.sha256((mac + SECRET_PART).encode()).digest()
 
+# Convert the hashed key to a URL-safe base64-encoded key
 SECRET_KEY = base64.urlsafe_b64encode(hashed_key[:32])
 
+# Create a Fernet cipher using the generated key
 cipher = Fernet(SECRET_KEY)
 
+# Process the API key
 def process_key(api_key):
     return cipher.encrypt(api_key.encode()).decode()
 
+# Reverse the processing
 def reverse_processing(processed_key):
     return cipher.decrypt(processed_key.encode()).decode()
 
@@ -61,7 +68,7 @@ def send_message():
     messages.append({"role": "assistant", "content": reply})
     update_conversation()
     user_input.delete(0, tk.END)
-    
+
 def send_message_on_enter(event):
     send_message()
 
@@ -93,15 +100,36 @@ def on_closing():
     global root
     root.destroy()
 
+def get_api_key_from_user():
+    """
+    Create a simple dialog to get the API key from the user.
+    """
+    def on_ok():
+        nonlocal api_key_var
+        api_key_entry_window.destroy()
+
+    api_key_entry_window = tk.Toplevel()
+    api_key_entry_window.title("Enter API Key")
+
+    ttk.Label(api_key_entry_window, text="Enter your OpenAI API key:").pack(padx=10, pady=10)
+    api_key_var = tk.StringVar()
+    ttk.Entry(api_key_entry_window, textvariable=api_key_var, width=40).pack(padx=10, pady=5)
+    ttk.Button(api_key_entry_window, text="OK", command=on_ok).pack(padx=10, pady=10)
+
+    api_key_entry_window.grab_set()  # Makes it modal, user has to close it before doing anything else
+    api_key_entry_window.mainloop()
+
+    return api_key_var.get()
+
 def main():
     global user_input, conversation, messages, model_var, temperature_var, max_tokens_var, context_var, tooltip_label, root
     api_key = retrieve_key()
+
     if not api_key:
-        print("No API key found. Please enter your OpenAI API key.")
-        api_key = input("Enter your OpenAI API key: ")
+        api_key = get_api_key_from_user()
         save_key(api_key)
+
     openai.api_key = api_key
-    print("API key set.")
 
     root = ThemedTk(theme="plastik")
     root.title("Chatbot")
@@ -150,7 +178,7 @@ def main():
     reset_button.bind("<Leave>", hide_tooltip)
 
     tooltip_label = ttk.Label(root, background="yellow")
-    
+
     messages = [{"role": "system", "content": context_var.get()}]
     update_conversation()
 
@@ -159,4 +187,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    
