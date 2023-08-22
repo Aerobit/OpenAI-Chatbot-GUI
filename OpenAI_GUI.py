@@ -112,7 +112,7 @@ def main():
     openai.api_key = api_key
     print("API key set.")
 
-    root = ThemedTk(theme="arc")
+    root = ThemedTk(theme="plastik")
     root.title("Chatbot")
     root.geometry("700x500")
 
@@ -136,7 +136,7 @@ def main():
     ttk.Entry(root, textvariable=temperature_var).grid(row=1, column=1)
 
     ttk.Label(root, text="Max Tokens:").grid(row=2, column=0)
-    max_tokens_var = tk.StringVar(value="150")
+    max_tokens_var = tk.StringVar(value="300")
     ttk.Entry(root, textvariable=max_tokens_var).grid(row=2, column=1)
 
     ttk.Label(root, text="Context:").grid(row=3, column=0)
