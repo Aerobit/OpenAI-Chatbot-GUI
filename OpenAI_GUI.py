@@ -98,6 +98,10 @@ def hide_tooltip(event):
     global root
     tooltip_label.place_forget()
 
+def on_closing():
+    global root
+    root.destroy()
+
 def main():
     global user_input, conversation, messages, model_var, temperature_var, max_tokens_var, context_var, tooltip_label, root
     api_key = retrieve_key()
@@ -158,6 +162,8 @@ def main():
     
     messages = [{"role": "system", "content": context_var.get()}]
     update_conversation()
+
+    root.protocol("WM_DELETE_WINDOW", on_closing)
     root.mainloop()
 
 if __name__ == "__main__":
