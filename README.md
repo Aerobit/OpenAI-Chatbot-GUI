@@ -33,7 +33,9 @@ This project provides a simple graphical interface for interacting with OpenAI's
 
 ## Configuration
 
-    The chatbot retrieves the OpenAI API key from a configuration file (config.json). The key is encrypted using a combination of a static key and the MAC address of the computer to enhance security. If the configuration file is missing or the key is not valid, you'll be prompted to enter it again.
+    The chatbot retrieves the OpenAI API key from a configuration file (config.json) saved in the working directory.
+    The key is encrypted using a combination of a static key and the MAC address of the computer to enhance security. 
+    If the configuration file is missing or the key is not valid, you'll be prompted to enter it again.
 
 ## Usage
 
