@@ -4,17 +4,28 @@ from tkinter import ttk
 from ttkthemes import ThemedTk
 from tkinter import scrolledtext
 import os
+import hashlib
+import base64
 from cryptography.fernet import Fernet
+from uuid import getnode as get_mac
 
-CONFIG_FILE = 'config.txt'
+CONFIG_FILE = 'config.json'
 
 # Split the key into parts and reassemble it at runtime
 part_1 = 'GRO9jNw5lXc4U5B8_'
 part_2 = 'Wz3zAaPPhQDgWFQ8'
 part_3 = 'CQxnLhxjJ0='
-SECRET_KEY = (part_1 + part_2 + part_3).encode()
 
-# Create a Fernet cipher using the hardcoded key
+# Get the MAC address of the computer
+mac = ':'.join(('%012X' % get_mac())[i:i+2] for i in range(0, 12, 2))
+
+# Create a hash of the concatenated string and MAC address
+hashed_key = hashlib.sha256((mac + part_1 + part_2 + part_3).encode()).digest()
+
+# Convert the hashed key to a URL-safe base64-encoded key
+SECRET_KEY = base64.urlsafe_b64encode(hashed_key[:32])
+
+# Create a Fernet cipher using the generated key
 cipher = Fernet(SECRET_KEY)
 
 # Process the API key
@@ -59,6 +70,9 @@ def send_message():
     messages.append({"role": "assistant", "content": reply})
     update_conversation()
     user_input.delete(0, tk.END)
+    
+def send_message_on_enter(event):
+    send_message()
 
 def update_conversation():
     conversation.config(state=tk.NORMAL)
@@ -66,7 +80,7 @@ def update_conversation():
     for message in messages:
         role = message["role"].capitalize()
         content = message["content"]
-        conversation.insert(tk.END, f"{role}: {content}\n")
+        conversation.insert(tk.END, f"{role}: {content}\n\n")
     conversation.config(state=tk.DISABLED)
     conversation.yview(tk.END)
 
@@ -78,7 +92,7 @@ def reset_conversation():
 def show_tooltip(event):
     global root
     tooltip_label.config(text="Reset the conversation and start with the initial system message.")
-    tooltip_label.place(relx=event.x_root/root.winfo_screenwidth(), rely=event.y_root/root.winfo_screenheight())
+    tooltip_label.place(relx=event.x_root/root.winfo_screenwidth(), rely=event.x_root/root.winfo_screenheight())
 
 def hide_tooltip(event):
     global root
@@ -98,12 +112,23 @@ def main():
     root.title("Chatbot")
     root.geometry("700x500")
 
+    root.grid_rowconfigure(0, weight=1)
+    root.grid_rowconfigure(1, weight=1)
+    root.grid_rowconfigure(2, weight=1)
+    root.grid_rowconfigure(3, weight=1)
+    root.grid_rowconfigure(4, weight=1)
+    root.grid_rowconfigure(5, weight=1)
+
+    root.grid_columnconfigure(0, weight=1)
+    root.grid_columnconfigure(1, weight=1)
+    root.grid_columnconfigure(2, weight=1)
+
     ttk.Label(root, text="Model:").grid(row=0, column=0)
     model_var = tk.StringVar(value="gpt-3.5-turbo")
     ttk.Entry(root, textvariable=model_var).grid(row=0, column=1)
 
     ttk.Label(root, text="Temperature:").grid(row=1, column=0)
-    temperature_var = tk.StringVar(value="0.7")
+    temperature_var = tk.StringVar(value="0.8")
     ttk.Entry(root, textvariable=temperature_var).grid(row=1, column=1)
 
     ttk.Label(root, text="Max Tokens:").grid(row=2, column=0)
@@ -119,6 +144,7 @@ def main():
 
     user_input = ttk.Entry(root, width=70)
     user_input.grid(row=5, column=0, padx=10, pady=10)
+    user_input.bind("<Return>", send_message_on_enter)
 
     send_button = ttk.Button(root, text="Send", command=send_message)
     send_button.grid(row=5, column=1, padx=10, pady=10)
@@ -136,6 +162,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-
