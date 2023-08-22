@@ -11,28 +11,19 @@ from uuid import getnode as get_mac
 
 CONFIG_FILE = 'config.json'
 
-# Split the key into parts and reassemble it at runtime
-part_1 = 'GRO9jNw5lXc4U5B8_'
-part_2 = 'Wz3zAaPPhQDgWFQ8'
-part_3 = 'CQxnLhxjJ0='
+KEY = 'GRO9jNw5lXc4U5B8_Wz3zAaPPhQDgWFQ8CQxnLhxjJ0='
 
-# Get the MAC address of the computer
 mac = ':'.join(('%012X' % get_mac())[i:i+2] for i in range(0, 12, 2))
 
-# Create a hash of the concatenated string and MAC address
-hashed_key = hashlib.sha256((mac + part_1 + part_2 + part_3).encode()).digest()
+hashed_key = hashlib.sha256((mac + KEY).encode()).digest()
 
-# Convert the hashed key to a URL-safe base64-encoded key
 SECRET_KEY = base64.urlsafe_b64encode(hashed_key[:32])
 
-# Create a Fernet cipher using the generated key
 cipher = Fernet(SECRET_KEY)
 
-# Process the API key
 def process_key(api_key):
     return cipher.encrypt(api_key.encode()).decode()
 
-# Reverse the processing
 def reverse_processing(processed_key):
     return cipher.decrypt(processed_key.encode()).decode()
 
@@ -168,3 +159,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    
