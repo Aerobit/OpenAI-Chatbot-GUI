@@ -42,25 +42,50 @@ def remove_key():
     except FileNotFoundError:
         pass
 
+def validate_api_key(api_key):
+    try:
+        openai.api_key = api_key
+        # Making a test call to the OpenAI API
+        openai.Completion.create(model="text-davinci-003", prompt="Test", max_tokens=5)
+        return True
+    except openai.OpenAIError:  # Corrected this line
+        return False
+
 def api_key_entry_popup():
     hidden_root = tk.Tk()
     hidden_root.withdraw()
 
     api_key_entry_window = tk.Toplevel(hidden_root)
-    api_key_entry_window.geometry("300x100")
+    api_key_entry_window.geometry("400x160")
     api_key_entry_window.title("API Key Entry")
 
     label = ttk.Label(api_key_entry_window, text="Enter your OpenAI API key:")
     label.pack(pady=10)
 
+    warning_label = ttk.Label(api_key_entry_window, text="", foreground="red")
+    warning_label.pack()
+
     api_key_var = tk.StringVar()
-    api_key_entry = ttk.Entry(api_key_entry_window, textvariable=api_key_var)
+    api_key_entry = ttk.Entry(api_key_entry_window, textvariable=api_key_var, width=55)
     api_key_entry.pack(pady=5)
 
     def submit():
+        if not api_key_var.get().strip():
+            warning_label.config(text="API key cannot be blank!")
+            return
+        elif not validate_api_key(api_key_var.get().strip()):
+            warning_label.config(text="API key is invalid!")
+            return
         save_key(api_key_var.get())
         api_key_entry_window.destroy()
         hidden_root.destroy()
+
+    def on_api_key_window_closing():
+        api_key_entry_window.destroy()
+        hidden_root.destroy()
+        exit()
+
+    api_key_entry_window.protocol("WM_DELETE_WINDOW", on_api_key_window_closing)
 
     submit_button = ttk.Button(api_key_entry_window, text="Submit", command=submit)
     submit_button.pack(pady=10)
@@ -122,7 +147,7 @@ def main():
         api_key_entry_popup()
         api_key = retrieve_key()
 
-    openai.api_key = api_key
+    openai.api_key = api_key.strip()
 
     root = ThemedTk(theme="plastik")
     root.title("Chatbot")
