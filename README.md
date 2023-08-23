@@ -25,7 +25,7 @@ A user-friendly interface for interacting with OpenAI's GPT-3 model.
 
 1. **Clone the Repository**
    ```shell
-   git clone <https://github.com/Aerobit/OpenAI-Chatbot-GUI.git>
+   git clone https://github.com/Aerobit/OpenAI-Chatbot-GUI.git
    ```
 
 2. **Install Dependencies**
