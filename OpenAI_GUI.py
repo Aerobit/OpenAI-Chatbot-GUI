@@ -45,10 +45,9 @@ def remove_key():
 def validate_api_key(api_key):
     try:
         openai.api_key = api_key
-        # Making a test call to the OpenAI API
         openai.Completion.create(model="text-davinci-003", prompt="Test", max_tokens=5)
         return True
-    except openai.OpenAIError:  # Corrected this line
+    except openai.OpenAIError:
         return False
 
 def api_key_entry_popup():
