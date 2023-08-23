@@ -11,26 +11,15 @@ from uuid import getnode as get_mac
 
 CONFIG_FILE = 'config.json'
 
-# Create a single key
-SECRET_PART = 'GRO9jNw5lXc4U5B8_Wz3zAaPPhQDgWFQ8CQxnLhxjJ0='
-
-# Get the MAC address of the computer
+base_key = 'GRO9jNw5lXc4U5B8_Wz3zAaPPhQDgWFQ8CQxnLhxjJ0='
 mac = ':'.join(('%012X' % get_mac())[i:i+2] for i in range(0, 12, 2))
-
-# Create a hash of the concatenated string and MAC address
-hashed_key = hashlib.sha256((mac + SECRET_PART).encode()).digest()
-
-# Convert the hashed key to a URL-safe base64-encoded key
+hashed_key = hashlib.sha256((mac + base_key).encode()).digest()
 SECRET_KEY = base64.urlsafe_b64encode(hashed_key[:32])
-
-# Create a Fernet cipher using the generated key
 cipher = Fernet(SECRET_KEY)
 
-# Process the API key
 def process_key(api_key):
     return cipher.encrypt(api_key.encode()).decode()
 
-# Reverse the processing
 def reverse_processing(processed_key):
     return cipher.decrypt(processed_key.encode()).decode()
 
@@ -39,7 +28,7 @@ def retrieve_key():
         with open(CONFIG_FILE, 'r') as file:
             processed_key = file.readline().strip()
             return reverse_processing(processed_key)
-    except FileNotFoundError:
+    except:
         return None
 
 def save_key(api_key):
@@ -47,11 +36,29 @@ def save_key(api_key):
     with open(CONFIG_FILE, 'w') as file:
         file.write(processed_key)
 
-def remove_key():
-    try:
-        os.remove(CONFIG_FILE)
-    except FileNotFoundError:
-        pass
+def api_key_entry_popup(parent):
+    api_key_entry_window = tk.Toplevel(parent)
+    api_key_entry_window.geometry("300x200")
+    api_key_entry_window.title("API Key Entry")
+
+    label = ttk.Label(api_key_entry_window, text="Enter your OpenAI API key:")
+    label.pack(pady=10)
+
+    api_key_var = tk.StringVar()
+    api_key_entry = ttk.Entry(api_key_entry_window, textvariable=api_key_var)
+    api_key_entry.pack(pady=5)
+
+    def submit():
+        save_key(api_key_var.get())
+        api_key_entry_window.destroy()
+
+    submit_button = ttk.Button(api_key_entry_window, text="Submit", command=submit)
+    submit_button.pack(pady=10)
+
+    api_key_entry_window.grab_set()
+    api_key_entry_window.wait_window()
+
+    return api_key_var.get()
 
 def send_message():
     message = user_input.get()
@@ -100,66 +107,41 @@ def on_closing():
     global root
     root.destroy()
 
-def get_api_key_from_user():
-    """
-    Create a simple dialog to get the API key from the user.
-    """
-    def on_ok():
-        nonlocal api_key_var
-        api_key_entry_window.destroy()
-
-    api_key_entry_window = tk.Toplevel()
-    api_key_entry_window.title("Enter API Key")
-
-    ttk.Label(api_key_entry_window, text="Enter your OpenAI API key:").pack(padx=10, pady=10)
-    api_key_var = tk.StringVar()
-    ttk.Entry(api_key_entry_window, textvariable=api_key_var, width=40).pack(padx=10, pady=5)
-    ttk.Button(api_key_entry_window, text="OK", command=on_ok).pack(padx=10, pady=10)
-
-    api_key_entry_window.grab_set()  # Makes it modal, user has to close it before doing anything else
-    api_key_entry_window.mainloop()
-
-    return api_key_var.get()
-
 def main():
     global user_input, conversation, messages, model_var, temperature_var, max_tokens_var, context_var, tooltip_label, root
-    api_key = retrieve_key()
-
-    if not api_key:
-        api_key = get_api_key_from_user()
-        save_key(api_key)
-
-    openai.api_key = api_key
 
     root = ThemedTk(theme="plastik")
     root.title("Chatbot")
     root.geometry("700x500")
 
-    root.grid_rowconfigure(0, weight=1)
-    root.grid_rowconfigure(1, weight=1)
-    root.grid_rowconfigure(2, weight=1)
-    root.grid_rowconfigure(3, weight=1)
-    root.grid_rowconfigure(4, weight=1)
-    root.grid_rowconfigure(5, weight=1)
+    root.resizable(True, True)
+    for i in range(6):
+        root.grid_rowconfigure(i, weight=1)
+    for i in range(3):
+        root.grid_columnconfigure(i, weight=1)
 
-    root.grid_columnconfigure(0, weight=1)
-    root.grid_columnconfigure(1, weight=1)
-    root.grid_columnconfigure(2, weight=1)
+    api_key = retrieve_key()
+    if not api_key:
+        api_key = api_key_entry_popup(root)
+        save_key(api_key)
+
+    openai.api_key = api_key
+
+    model_var = tk.StringVar(value="gpt-3.5-turbo")
+    temperature_var = tk.StringVar(value="0.8")
+    max_tokens_var = tk.StringVar(value="300")
+    context_var = tk.StringVar(value="You are a helpful assistant.")
 
     ttk.Label(root, text="Model:").grid(row=0, column=0)
-    model_var = tk.StringVar(value="gpt-3.5-turbo")
     ttk.Entry(root, textvariable=model_var).grid(row=0, column=1)
 
     ttk.Label(root, text="Temperature:").grid(row=1, column=0)
-    temperature_var = tk.StringVar(value="0.8")
     ttk.Entry(root, textvariable=temperature_var).grid(row=1, column=1)
 
     ttk.Label(root, text="Max Tokens:").grid(row=2, column=0)
-    max_tokens_var = tk.StringVar(value="300")
     ttk.Entry(root, textvariable=max_tokens_var).grid(row=2, column=1)
 
     ttk.Label(root, text="Context:").grid(row=3, column=0)
-    context_var = tk.StringVar(value="You are a helpful assistant.")
     ttk.Entry(root, textvariable=context_var).grid(row=3, column=1)
 
     conversation = scrolledtext.ScrolledText(root, wrap=tk.WORD, width=80, height=20, state=tk.DISABLED)
