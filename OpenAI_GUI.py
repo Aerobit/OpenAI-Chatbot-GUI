@@ -43,7 +43,6 @@ def remove_key():
         pass
 
 def api_key_entry_popup():
-    # Create a hidden root window
     hidden_root = tk.Tk()
     hidden_root.withdraw()
 
