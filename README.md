@@ -35,7 +35,7 @@ A user-friendly interface for interacting with OpenAI's GPT-3 model.
    ```
 
 3. **Run the Application**
-   Execute the `OpenAI_GUI.py` script. If it's your first run, you'll be prompted to enter your OpenAI API key.
+   Execute the `openai_gui.py` script. If it's your first run, you'll be prompted to enter your OpenAI API key.
 
 4. **Engage with AI**
    Type your queries and enjoy conversing with the chatbot.
