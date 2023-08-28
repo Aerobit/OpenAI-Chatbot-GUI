@@ -34,7 +34,6 @@ class UserConfigManager:
         except json.JSONDecodeError:
             return {}
 
-
     def save_config(self, data):
         with open(self.config_file, 'w') as file:
             json.dump(data, file)
@@ -128,7 +127,7 @@ class ChatbotUI:
         self.update_conversation()
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
         self.root.mainloop()
-######################################################################
+
     def setup_ui(self):
         menubar = tk.Menu(self.root)
         filemenu = tk.Menu(menubar, tearoff=0)
@@ -419,7 +418,6 @@ class ChatbotUI:
                 self.custom_temperature_label.set("Custom...")
             elif variable is self.max_tokens_var:
                 self.custom_max_tokens_label.set("Custom...")
-
 
 if __name__ == "__main__":
     ChatbotUI()
