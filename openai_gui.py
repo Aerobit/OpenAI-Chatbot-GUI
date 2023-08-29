@@ -87,9 +87,9 @@ class UserConfigManager:
     def validate_api_key(self, api_key):
         try:
             openai.api_key = api_key
-            openai.Completion.create(model="text-davinci-003", prompt="Test", max_tokens=5)
+            response = openai.Completion.create(engine="text-davinci-003", prompt="Test", max_tokens=5)
             return True
-        except openai.OpenAIError:
+        except Exception:
             return False
 
 
@@ -310,20 +310,16 @@ class ChatbotUI:
         api_key_entry.pack(pady=5)
 
         def submit():
-            if not api_key_var.get().strip():
+            api_key = api_key_var.get().strip()
+            if not api_key:
                 warning_label.config(text="API key cannot be blank!")
                 return
-            try:
-                if not self.config_manager.validate_api_key(api_key_var.get().strip()):
-                    warning_label.config(text="API key is invalid!")
-                    return
-            except openai.error.AuthenticationError:
-                warning_label.config(text="API key is incorrect!")
+            elif not self.config_manager.validate_api_key(api_key):
+                warning_label.config(text="API key is invalid!")
                 return
-            self.config_manager.save_key(api_key_var.get())
+            self.config_manager.save_key(api_key)
             api_key_entry_window.destroy()
             hidden_root.destroy()
-
 
         def on_api_key_window_closing():
             api_key_entry_window.destroy()
